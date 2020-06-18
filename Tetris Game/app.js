@@ -1,4 +1,4 @@
-let allColors = ['#0597F2','#E5F5FF','#FFA200'];
+let allColors = ['#EF0B59','#BE0358','#FFA200','#37A2B9','#FC6250'];
 const Z = [[[1,1,0],[0,1,1],[0,0,0]],
             [[0,0,1],[0,1,1],[0,1,0]],
             [[0,0,0],[1,1,0],[0,1,1]],
@@ -32,8 +32,8 @@ myTetro.push(Z);
 myTetro.push(S);
 myTetro.push(T);
 myTetro.push(L);
-myTetro.push(I);
-myTetro.push(O);
+//myTetro.push(I);
+//myTetro.push(O);
 console.log(myTetro.length);
 let sq = 20;
 let canvas = document.getElementById('myCanvas');
@@ -42,8 +42,9 @@ ctx.fillStyle = "white";
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 let board = [];
 for(let i=0; i<20; i++) {
-    board.push([0,0,0,0,0,0,0,0,0,0]);
+    board.push([1,0,0,0,0,0,0,0,0,0,0,1]);
 }
+board.push([1,1,1,1,1,1,1,1,1,1,1,1]);
 class Board {
 	constructor(){
         this.board = board;
@@ -53,6 +54,9 @@ class Board {
     };
 	
 }
+
+let myBoard = new Board();
+
 class Titris {
     constructor(){
         this.tetro = myTetro[Math.floor(Math.random()*myTetro.length)];
@@ -61,12 +65,14 @@ class Titris {
         this.x = 3;
         this.y = 0;
     };
+	
     drawSq(x= 3, y = 0) {
         ctx.fillStyle = this.myColor;
         ctx.fillRect(x*sq,y*sq,sq,sq);
         ctx.strokeStyle = "white";
         ctx.strokeRect(x*sq,y*sq,20,20);
     }
+	
     drawTetris(dx = 0, dy = 0) {
         //ctx.clearRect(0,0,10*sq,20*sq);//must be modified
         this.tetroState.forEach((item,row)=> item.forEach((cell, col)=> {
@@ -75,6 +81,7 @@ class Titris {
             }
         }));
     }
+	
     clearArea() {
         this.tetroState.forEach((item,row)=> item.forEach((cell, col)=> {
             if(cell === 1) {
@@ -90,44 +97,124 @@ class Titris {
 		this.drawTetris();
 	}
 	
+	testshock() {
+		if(this.tetroState[0].length === 4){
+			if(this.tetroState[3].every((item,index)=> (item === 0 ))) {
+				return true;
+			}
+			else {
+				return this.tetroState[3].every((item, index)=> {
+					if(item === 1 && (myBoard.board[this.y + 3][this.x + index] === 0)) {				
+						return true;
+						}
+					else {
+						return false;
+					}
+				});
+			}
+			
+		}
+		
+		else {
+			if(this.tetroState[2].every((item,index)=> (item === 0 ))) {
+				return true;
+			}
+			else {
+				let buttomshok = this.tetroState[2].every((item, index)=> {
+					if(item === 1 && myBoard.board[this.y + 3][this.x + index] === 0) {
+						return true;
+						}
+					else if(item === 0 ) {
+						return true;
+					}
+					else {
+						return false;
+						}
+				});
+				return buttomshok;
+			}
+			
+		}
+	}
+	
     moveDown() {
-        if(this.y<17) {
+        if(this.testshock()) {
             this.y += 1;
 			this.refresh();
         }
         else {
-            board[this.y][this.x] = 1;
+			console.log("i'm blocked");
+			this.tetroState.forEach((ligne,indexL)=>{
+				ligne.forEach((col,indexC)=> {
+				myBoard.board[this.y + indexL][this.x + indexC] = col;});
+			});
 			let mytitris = new Titris();
 			tetrisTable.push(mytitris);
         }
     }
+	//move tetris to left
     moveLeft() {
-        console.log(this.tetroState[0][0]);
-        console.log(this.tetroState[1][0]);
-        console.log(this.tetroState[2][0]);
-        if(this.x>0) {
+		let leftshok = [this.tetroState[0][2], this.tetroState[1][2], this.tetroState[2][2]].every((item, index)=> {
+					if(item === 1 && myBoard.board[this.y + index][this.x + 4] === 0) {
+						return true;
+						}
+					else if(item === 0 ) {
+						return true;
+					}
+					else {
+						return false;
+						}
+				});
+        if(leftshok) {
             this.x += -1;
 			this.refresh();
         }
-        else if(this.x===0 && this.tetroState.every(item => item[0] === 0)) {
-            this.x += -1;			
-			this.refresh();
-        }
-        console.log('x: '); 
-        console.log(this.x);  
+
     }
+	//move tetris to right
     moveRight() {
-        if(this.x<7) {
+		let rightshok = [this.tetroState[0][0], this.tetroState[1][0], this.tetroState[2][0]].every((item, index)=> {
+					if(item === 1 && myBoard.board[this.y + index][this.x + 3] === 0) {
+						return true;
+						}
+					else if(item === 0 ) {
+						return true;
+					}
+					else {
+						return false;
+						}
+				});
+		
+        if(rightshok) {
             this.x += 1;
 			this.refresh();
         }
-        else if(this.x === 7 && this.tetroState.every(item => item[2] === 0)) {
-            this.x += 1;
-			this.refresh();
-        }
-        console.log('click'); 
     }
+	//Rotate tetris
     rotate() {
+		let leftshok = [this.tetroState[0][2], this.tetroState[1][2], this.tetroState[2][2]].every((item, index)=> {
+					if(item === 1 && myBoard.board[this.y + index][this.x + 3] === 0) {
+						return true;
+						}
+					else if(item === 0 ) {
+						return true;
+					}
+					else {
+						return false;
+						}
+				});
+		
+		let rightshok = [this.tetroState[0][0], this.tetroState[1][0], this.tetroState[2][0]].every((item, index)=> {
+					if(item === 1 && myBoard.board[this.y + index][this.x + 3] === 0) {
+						return true;
+						}
+					else if(item === 0 ) {
+						return true;
+					}
+					else {
+						return false;
+						}
+				});
         let index = this.tetro.findIndex((item)=> item === this.tetroState);
         
         console.log('This x: '+this.x);
@@ -137,6 +224,11 @@ class Titris {
         else {
             index += 1;            
         }
+		if(rightshok && leftshok) {
+            this.tetroState = this.tetro[index];
+            this.refresh();
+        }
+		/*
         if(this.x>0 && this.x<=7) {
             this.tetroState = this.tetro[index];
             this.refresh();
@@ -148,7 +240,7 @@ class Titris {
         else if(this.x >=8 && this.tetro[index].every(item => item[2] === 0)) {
             this.tetroState = this.tetro[index];
             this.refresh();
-        }
+        }*/
         console.log(this.tetro[index][0][2]);
         console.log(this.tetro[index][1][2]);
         console.log(this.tetro[index][2][2]);
@@ -160,6 +252,7 @@ function testRotate() {
 }
 
 function testDown() {
+
    tetrisTable[tetrisTable.length-1].moveDown();
 }
 
@@ -179,7 +272,7 @@ function sleep(milliseconds) {
   }
 function animate() {
     requestAnimationFrame(animate);
-    sleep(1000);
+    sleep(500);
     testDown();
 	tetrisTable.forEach((item,index)=> {
 		if(index !== tetrisTable.length-1) {
